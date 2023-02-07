@@ -14,7 +14,7 @@ useEffect(() => {
   if (savedCount) { 
     setChangedBossCount(JSON.parse(savedCount));
   }
-}); 
+}, [changedBossCount]); 
 
 useEffect(() => { 
   localStorage.setItem('ChangedBossCount', (changedBossCount));
