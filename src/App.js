@@ -7,11 +7,9 @@ import { getDatabase, ref, remove, update } from 'firebase/database';
 
 function App() {  
   const [selectedBosses, setSelectedBosses] = useState([]); 
-  const [changedBossCount, setChangedBossCount] = useState(localStorage.getItem('ChangedBossCount') ||  0);
+  const [changedBossCount, setChangedBossCount] = useState( localStorage.getItem('ChangedBossCount') ||   0);
 
-  
 const handleButtonClickKilled = (e, boss) => {   
-  console.log('button clicked!');
     if (selectedBosses.includes(boss)) { 
       setSelectedBosses(selectedBosses.filter(b => b !== boss)); 
 
@@ -29,9 +27,7 @@ const handleButtonClickKilled = (e, boss) => {
         updates['/data/' + e.target.id + '/killed'] = postData;
         return update(ref(db), updates); 
       } 
-
       updateKilled();  
-    
     }  
 
 useEffect ( () => { 
@@ -49,7 +45,6 @@ useEffect(() => {
   localStorage.setItem('ChangedBossCount', (changedBossCount));
 }, [changedBossCount]); 
 
-  
    const handleButtonClickUndo = (e, boss) => { 
     setSelectedBosses(selectedBosses.filter(b => b !==boss)); 
     setChangedBossCount(changedBossCount - 1);

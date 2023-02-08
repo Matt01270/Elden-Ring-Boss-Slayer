@@ -6,9 +6,6 @@ import { getDatabase, ref, onValue } from 'firebase/database';
 const BossItem = (props) => { 
 const [bosses, setBosses] = useState([]); 
 
-
-
-
 useEffect(() => { 
     
   const database = getDatabase(firebase); 
