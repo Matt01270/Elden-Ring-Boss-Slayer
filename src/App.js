@@ -2,12 +2,20 @@ import './App.css';
 import BossItem from './BossItem';  
 import ProgressBar from './ProgressBar';
 import { useState, useEffect } from 'react';  
-import firebase from './firebase';
-import { getDatabase, ref, remove, update } from 'firebase/database';
+import { getDatabase, ref, remove, update, onValue, set } from 'firebase/database';
 
 function App() {  
   const [selectedBosses, setSelectedBosses] = useState([]); 
-  const [changedBossCount, setChangedBossCount] = useState( localStorage.getItem('ChangedBossCount') ||   0);
+  const [progressBarCount, setProgressBarCount] = useState(0); 
+
+  useEffect(() => { 
+    const database = getDatabase(); 
+    const dbRef = ref(database, 'progressBarCount'); 
+    onValue(dbRef, (snapshot) => { 
+      setProgressBarCount(snapshot.val())
+    });
+  }, []);
+
 
 const handleButtonClickKilled = (e, boss) => {   
     if (selectedBosses.includes(boss)) { 
@@ -15,10 +23,12 @@ const handleButtonClickKilled = (e, boss) => {
 
     } else { 
       setSelectedBosses([...selectedBosses, boss]); };   
-      setChangedBossCount(prevCount => Number(prevCount) + 1);
+      setProgressBarCount(prevCount => Number(prevCount) + 1);
      
   const updateKilled = () => { 
         const db = getDatabase(); 
+        const dbRef = ref(db, 'progressBarCount'); 
+        set(dbRef, progressBarCount + 1)
         const postData = { 
           changed: 'killed'
         } 
@@ -30,31 +40,22 @@ const handleButtonClickKilled = (e, boss) => {
       updateKilled();  
     }  
 
-useEffect ( () => { 
-  console.log('changing state.');
-}, [])
-
-useEffect(() => { 
-  const savedCount = localStorage.getItem('changedBossCount', JSON.stringify(changedBossCount)); 
-  if (savedCount) { 
-    setChangedBossCount(JSON.parse(savedCount));
-  }
-}, [changedBossCount]); 
-
-useEffect(() => { 
-  localStorage.setItem('ChangedBossCount', (changedBossCount));
-}, [changedBossCount]); 
-
-   const handleButtonClickUndo = (e, boss) => { 
-    setSelectedBosses(selectedBosses.filter(b => b !==boss)); 
-    setChangedBossCount(changedBossCount - 1);
-    const removeChange = () => { 
-      const database = getDatabase(firebase); 
-        const dbRef = ref(database, '/data/' + e.target.id + '/killed');
-        remove(dbRef)
-    }; 
-    removeChange();     
-  } 
+ const handleButtonClickUndo = (e, boss) => {
+  setSelectedBosses(selectedBosses.filter(b => b !== boss));
+  const newProgressBarCount = progressBarCount - 1;
+  setProgressBarCount(newProgressBarCount); 
+  
+  
+  const database = getDatabase();
+  const dbRef = ref(database, 'progressBarCount');
+  set(dbRef, newProgressBarCount);
+  
+  const removeChange = () => {
+    const dbRef = ref(database, `data/${e.target.id}/killed`);
+    remove(dbRef);
+  };
+  removeChange();
+};
 
   return ( 
     <div className="App">  
@@ -62,7 +63,7 @@ useEffect(() => {
       <h1>ELDEN RING</h1> 
       <h2>Boss Slayer</h2>  
       <div className="introText"><p>Hail, Tarnished. This tool shall aid thee in thy journey to vanquish each and every monstrous overlord that roams the Lands Between. May thy luck be ever strong.</p></div> 
-      <ProgressBar changedBossCount={changedBossCount}/>
+      <ProgressBar progressBarCount={progressBarCount}/>
       <BossItem handleButtonClickKilled={handleButtonClickKilled} handleButtonClickUndo={handleButtonClickUndo}/> 
     </div> 
       <footer> 
